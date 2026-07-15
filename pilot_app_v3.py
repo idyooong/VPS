@@ -22,15 +22,15 @@ def get_gspread_client():
 # [수정됨] 엑셀 스키마 보호를 위해 ID 분리 (None_T2: 정상 진단용 / None_T1: 심각도 없음용)
 GROUPS = {
     "group_A": {
-        "task1": ["OCD", "MDD", "None_T2", "GAD"],  # 질환 종류 맞추기용 4개
-        "task2": ["Moderate", "Mild", "Severe", "None_T1"] # 우울증 심각도 평가용 4개
+        "task1": ["OCD", "MDD", "None_T1", "GAD"],  # 질환 종류 맞추기용 4개
+        "task2": ["Moderate", "Mild", "Severe", "None_T2"] # 우울증 심각도 평가용 4개
     }
 }
 
 # [수정됨] 분리된 ID 반영
 GROUND_TRUTH = {
-    "None_T1": {"diagnosis": "주요우울장애(MDD)", "severity": "없음(None)"},
-    "None_T2": {"diagnosis": "질환 없음", "severity": "N/A"},
+    "None_T2": {"diagnosis": "주요우울장애(MDD)", "severity": "없음(None)"},
+    "None_T1": {"diagnosis": "질환 없음", "severity": "N/A"},
     "Mild": {"diagnosis": "주요우울장애(MDD)", "severity": "경도(Mild)"},
     "Moderate": {"diagnosis": "주요우울장애(MDD)", "severity": "중등도(Moderate)"},
     "Severe": {"diagnosis": "주요우울장애(MDD)", "severity": "중증(Severe)"},
@@ -43,10 +43,14 @@ VIDEO_LENGTHS = {
     "None_T2": 210, "Mild": 230, "Moderate": 250, "Severe": 208,
     "None_T1": 236, "OCD": 263, "GAD": 235, "MDD": 189
 }
-# 실험 전체 및 타임 로그 관리를 위한 독립 세션 초기화
-if 'time_logs' not in st.session_state:
-    st.session_state.time_logs = {}
+
+
 def main():
+    if "global_start_time" not in st.session_state:
+        st.session_state.global_start_time = time.time()
+    # 실험 전체 및 타임 로그 관리를 위한 독립 세션 초기화
+    if 'time_logs' not in st.session_state:
+        st.session_state.time_logs = {}
     st.set_page_config(page_title="HCI 실험", layout="wide")
     hide_streamlit_style = """
             <style>
@@ -341,24 +345,44 @@ def participant_view():
                 st.rerun()
             st.stop()
         else:
-            # None_T1, None_T2 영상의 실제 파일 이름은 둘 다 None.mp4 임을 감안하여 매핑 처리
-            st.video(f"videos/{video_id}.mp4")
-
-            if not st.session_state[f"unlocked_{video_id}_p1"]:
-                st.warning("영상이 종료된 후 아래 버튼을 눌러 평가 문항을 여십시오.")
+            # 1. 시청 여부 확인
+            is_unlocked = st.session_state.get(f"unlocked_{video_id}_p1", False)
+            
+            # 2. 영상 로드 (조작 차단)
+            video_path = f"videos/{video_id}.mp4"
+            with open(video_path, "rb") as v_file: video_bytes = v_file.read()
+            encoded_video = base64.b64encode(video_bytes).decode()
+            
+            # 영상 렌더링 (pointer-events: none 제거 -> 버튼 클릭 가능하게 하려면 영상 컨테이너와 버튼을 분리해야 함)
+            st.markdown(f'''
+                <div style="background: black;">
+                    <video width="100%" autoplay playsinline style="pointer-events: none;">
+                        <source src="data:video/mp4;base64,{encoded_video}" type="video/mp4">
+                    </video>
+                </div>
+            ''', unsafe_allow_html=True)
+            
+            # 3. [시청 전] 로직
+            if not is_unlocked:
+                if f"start_time_{video_id}_p1" not in st.session_state:
+                    st.session_state[f"start_time_{video_id}_p1"] = time.time()
+                
+                elapsed = time.time() - st.session_state[f"start_time_{video_id}_p1"]
+                                
                 if st.button("평가 문항 열기", key=f"unlock_btn_{video_id}_p1"):
-                    if time.time() - st.session_state[f"start_time_{video_id}_p1"] < required_time:
-                        st.error("아직 영상 시청이 완료되지 않았습니다.")
+                    if elapsed < required_time:
+                        st.error(f"아직 영상 시청이 완료되지 않았습니다. ({int(elapsed)}/{required_time}초)")
                     else:
                         st.session_state[f"unlocked_{video_id}_p1"] = True
                         st.rerun()
-                    # st.session_state[f"unlocked_{video_id}_p1"] = True
-                    # st.rerun()
+                
+                # 영상이 끝나기 전엔 평가 폼을 렌더링하지 않음
                 st.stop()
-
-        with st.form(f"survey_part1_t1_{video_id}"):
-            st.markdown("**1. 이 환자의 가장 가능성 높은 질환(진단명)은 무엇이라고 생각하십니까?**")
-            st.session_state.data[f"{video_id}_q10_category"] = st.selectbox(
+            # 4. [시청 완료 후] - 들여쓰기를 밖으로 완전히 뺌 (if not is_unlocked 블록 외부)
+            st.success("시청이 완료되었습니다. 아래 항목을 작성해 주십시오.")
+            with st.form(f"survey_part1_t1_{video_id}"):
+                st.markdown("**1. 이 환자의 가장 가능성 높은 질환(진단명)은 무엇이라고 생각하십니까?**")
+                st.session_state.data[f"{video_id}_q10_category"] = st.selectbox(
                                 "대분류 선택 (카테고리 선택)",
                                 ["해당 없음", "신경발달 장애", "조현병 스펙트럼 및 기타 정신병적 장애", "양극성 및 관련 장애", "우울장애", 
                                 "불안장애", "강박 및 관련 장애", "외상 및 스트레스 관련 장애", "해리 장애", "신체 증상 관련 장애", 
@@ -366,22 +390,22 @@ def participant_view():
                                 "파괴적, 충동조절 및 품행 장애", "물질관련 및 중독 장애", "신경인지 장애", "성격장애", "변태성욕 장애", "기타"],
                                 index=None
                             )
-            st.session_state.data[f"{video_id}_q10_detail"] = st.text_input("소분류 (세부 질환명) 기재 (※ 대분류 [해당 없음] 선택 시, ‘없음’ 기재)")
+                st.session_state.data[f"{video_id}_q10_detail"] = st.text_input("소분류 (세부 질환명) 기재 (※ 대분류 [해당 없음] 선택 시, ‘없음’ 기재)")
 
-            st.session_state.data[f"{video_id}_q12_cues"] = st.multiselect("**2. 위와 같이 진단을 판단하는 데 '가장 큰 영향'을 미친 주요 단서(Cues)를 모두 선택해 주십시오. (중복 선택 가능)**", ["발화 내용", "목소리 톤 및 속도", "표정 및 시선 처리", "신체적 움직임 및 자세", "환자의 외양 및 옷차림"])
-            st.session_state.data[f"{video_id}_q13_reason"] = st.text_area("**3. 위 단서를 선택한 구체적인 이유를 적어주십시오.**")
+                st.session_state.data[f"{video_id}_q12_cues"] = st.multiselect("**2. 위와 같이 진단을 판단하는 데 '가장 큰 영향'을 미친 주요 단서(Cues)를 모두 선택해 주십시오. (중복 선택 가능)**", ["발화 내용", "목소리 톤 및 속도", "표정 및 시선 처리", "신체적 움직임 및 자세", "환자의 외양 및 옷차림"])
+                st.session_state.data[f"{video_id}_q13_reason"] = st.text_area("**3. 위 단서를 선택한 구체적인 이유를 적어주십시오.**")
 
-            if st.form_submit_button("평가 제출"):
-                req = [f"{video_id}_q10_category", f"{video_id}_q10_detail", f"{video_id}_q12_cues", f"{video_id}_q13_reason"]
-                if not all(st.session_state.data.get(k) for k in req): st.error("모든 평가 문항에 응답해 주십시오."); st.stop()
+                if st.form_submit_button("평가 제출"):
+                    req = [f"{video_id}_q10_category", f"{video_id}_q10_detail", f"{video_id}_q12_cues", f"{video_id}_q13_reason"]
+                    if not all(st.session_state.data.get(k) for k in req): st.error("모든 평가 문항에 응답해 주십시오."); st.stop()
                 
-                # if st.session_state.v_idx < len(st.session_state.task1_videos) - 1:
-                #     st.session_state.v_idx += 1
-                # else:
-                #     st.session_state.step = 'task1_intermission'
-                #     st.session_state.v_idx = 0
-                st.session_state.step = 'task1_intermission'
-                st.rerun()
+                    # if st.session_state.v_idx < len(st.session_state.task1_videos) - 1:
+                    #     st.session_state.v_idx += 1
+                    # else:
+                    #     st.session_state.step = 'task1_intermission'
+                    #     st.session_state.v_idx = 0
+                    st.session_state.step = 'task1_intermission'
+                    st.rerun()
 
     # ---------------------------------------------------------
     # [Step] TASK 1 - Intermission (정답 공개)
@@ -492,33 +516,55 @@ def participant_view():
                 st.rerun()
             st.stop()
         else:
-            st.video(f"videos/{video_id}.mp4")
-
-            if not st.session_state[f"unlocked_{video_id}_p1"]:
-                st.warning("영상이 종료된 후 아래 버튼을 눌러 평가 문항을 여십시오.")
-                if st.button("평가 문항 열기", key=f"unlock_btn_{video_id}_p1"):
-                    if time.time() - st.session_state[f"start_time_{video_id}_p1"] < required_time:
-                        st.error("아직 영상 시청이 완료되지 않았습니다.")
-                    else:
-                        st.session_state[f"unlocked_{video_id}_p1"] = True
-                        st.rerun()
-                    # st.session_state[f"unlocked_{video_id}_p1"] = True
-                    # st.rerun()
-                st.stop()
-
-        with st.form(f"survey_part1_t2_{video_id}"):
-            st.write("**[안내] 이 가상 환자의 질환은 '주요우울장애(Major Depressive Disorder)'입니다. 해당 질환을 바탕으로 환자의 증상 심각도를 평가해 주십시오.**")
+            # 1. 시청 여부 확인
+            is_unlocked = st.session_state.get(f"unlocked_{video_id}_p2", False)
             
-            st.session_state.data[f"{video_id}_q11_severity"] = st.radio("**1. 이 환자의 전반적인 증상 심각도(Severity)는 어느 정도라고 평가하십니까?**", ["None (증상 없음)", "Mild (경도)", "Moderate (중등도)", "Severe (중증)"], index=None)
-            st.session_state.data[f"{video_id}_q12_cues"] = st.multiselect("**2. 위와 같이 심각도를 판단하는 데 '가장 큰 영향'을 미친 주요 단서(Cues)를 모두 선택해 주십시오.**", ["발화 내용", "목소리 톤 및 속도", "표정 및 시선 처리", "신체적 움직임 및 자세", "환자의 외양 및 옷차림"])
-            st.session_state.data[f"{video_id}_q13_reason"] = st.text_area("**3. 위 단서를 선택한 구체적인 이유를 적어주십시오.**")
-
-            if st.form_submit_button("평가 제출"):
-                req = [f"{video_id}_q11_severity", f"{video_id}_q12_cues", f"{video_id}_q13_reason"]
-                if not all(st.session_state.data.get(k) for k in req): st.error("모든 평가 문항에 응답해 주십시오."); st.stop()
+            # 2. 영상 로드 (조작 차단)
+            video_path = f"videos/{video_id}.mp4"
+            with open(video_path, "rb") as v_file: video_bytes = v_file.read()
+            encoded_video = base64.b64encode(video_bytes).decode()
+            
+            # 영상 렌더링 (pointer-events: none으로 마우스 조작 차단)
+            st.markdown(f'''
+                <div style="background: black;">
+                    <video width="100%" autoplay playsinline style="pointer-events: none;">
+                        <source src="data:video/mp4;base64,{encoded_video}" type="video/mp4">
+                    </video>
+                </div>
+            ''', unsafe_allow_html=True)
+            
+            # 3. [시청 전] 로직
+            if not is_unlocked:
+                if f"start_time_{video_id}_p2" not in st.session_state:
+                    st.session_state[f"start_time_{video_id}_p2"] = time.time()
                 
-                st.session_state.step = 'task2_intermission'
-                st.rerun()
+                elapsed = time.time() - st.session_state[f"start_time_{video_id}_p2"]
+
+                if st.button("평가 문항 열기", key=f"unlock_btn_{video_id}_p2"):
+                    if elapsed < required_time:
+                        st.error(f"아직 영상 시청이 완료되지 않았습니다. ({int(elapsed)}/{required_time}초)")
+                    else:
+                        st.session_state[f"unlocked_{video_id}_p2"] = True
+                        st.rerun()
+            
+                # 영상 완료 전에는 평가 폼을 렌더링하지 않음
+                st.stop()
+            # 4. [시청 완료 후] - 들여쓰기를 밖으로 완전히 뺌 (if not is_unlocked 블록 외부)
+            st.success("시청이 완료되었습니다. 아래 항목을 작성해 주십시오.")
+
+            with st.form(f"survey_part1_t2_{video_id}"):
+                st.write("**[안내] 이 가상 환자의 질환은 '주요우울장애(Major Depressive Disorder)'입니다. 해당 질환을 바탕으로 환자의 증상 심각도를 평가해 주십시오.**")
+                
+                st.session_state.data[f"{video_id}_q11_severity"] = st.radio("**1. 이 환자의 전반적인 증상 심각도(Severity)는 어느 정도라고 평가하십니까?**", ["None (증상 없음)", "Mild (경도)", "Moderate (중등도)", "Severe (중증)"], index=None)
+                st.session_state.data[f"{video_id}_q12_cues"] = st.multiselect("**2. 위와 같이 심각도를 판단하는 데 '가장 큰 영향'을 미친 주요 단서(Cues)를 모두 선택해 주십시오.**", ["발화 내용", "목소리 톤 및 속도", "표정 및 시선 처리", "신체적 움직임 및 자세", "환자의 외양 및 옷차림"])
+                st.session_state.data[f"{video_id}_q13_reason"] = st.text_area("**3. 위 단서를 선택한 구체적인 이유를 적어주십시오.**")
+
+                if st.form_submit_button("평가 제출"):
+                    req = [f"{video_id}_q11_severity", f"{video_id}_q12_cues", f"{video_id}_q13_reason"]
+                    if not all(st.session_state.data.get(k) for k in req): st.error("모든 평가 문항에 응답해 주십시오."); st.stop()
+                    
+                    st.session_state.step = 'task2_intermission'
+                    st.rerun()
 
     # ---------------------------------------------------------
     # [Step] TASK 2 - Intermission (정답 공개)
