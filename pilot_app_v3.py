@@ -371,7 +371,7 @@ def participant_view():
                                 
                 if st.button("평가 문항 열기", key=f"unlock_btn_{video_id}_p1"):
                     if elapsed < required_time:
-                        st.error(f"아직 영상 시청이 완료되지 않았습니다. ({int(elapsed)}/{required_time}초)")
+                        st.error(f"아직 영상 시청이 완료되지 않았습니다.")
                     else:
                         st.session_state[f"unlocked_{video_id}_p1"] = True
                         st.rerun()
