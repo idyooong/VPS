@@ -169,14 +169,14 @@ GROUND_TRUTH = {
     "MDD": {"diagnosis": "Major Depressive Disorder", "severity": "N/A"}
 }
 
-VIDEO_LENGTHS = {
-    "None_T1": 226, "Mild": 230, "Moderate": 250, "Severe": 208,
-    "None_T2": 235, "OCD": 344, "GAD": 265, "MDD": 185
-}
 # VIDEO_LENGTHS = {
-#     "None_T1": 5, "Mild": 5, "Moderate": 5, "Severe": 5,
-#     "None_T2": 5, "OCD": 5, "GAD": 5, "MDD": 5
+#     "None_T1": 226, "Mild": 230, "Moderate": 250, "Severe": 208,
+#     "None_T2": 235, "OCD": 344, "GAD": 265, "MDD": 185
 # }
+VIDEO_LENGTHS = {
+    "None_T1": 5, "Mild": 5, "Moderate": 5, "Severe": 5,
+    "None_T2": 5, "OCD": 5, "GAD": 5, "MDD": 5
+}
 # 실험 전체 및 타임 로그 관리를 위한 독립 세션 초기화
 if 'time_logs' not in st.session_state:
     st.session_state.time_logs = {}
