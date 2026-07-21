@@ -536,7 +536,7 @@ def participant_view():
             
             st.session_state.data[f"{video_id}_q11_severity"] = st.selectbox(
                                 "심각도 선택",
-                                ["None (증상 없음)", "Mild (경도)", "Moderate (중등도)", "Severe (중증)"],
+                                ["None (증상 없음)", "Mild", "Moderate", "Severe"],
                                 index=None
                             )
             st.write("**2. 아래 항목을 위 환자의 심각도를 판단하는 데 영향을 미친 순서대로 1순위부터 5순위까지 표시해 주십시오. (1 = 가장 큰 영향을 미친 항목, 5 = 가장 작은 영향을 미친 항목)**")
