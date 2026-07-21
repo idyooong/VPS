@@ -154,30 +154,26 @@ GROUPS = {
     "group_A": {
         "task1": ["None_T1", "Mild", "Moderate", "Severe"], # 우울증 심각도 평가용 4개
         "task2": ["None_T2", "OCD", "GAD", "MDD"]  # 질환 종류 맞추기용 4개
-        
     }
 }
 
 # [수정됨] 분리된 ID 반영
 GROUND_TRUTH = {
-    "None_T1": {"diagnosis": "주요우울장애(MDD)", "severity": "없음(None)"},
+    "None_T1": {"diagnosis": "질환 없음", "severity": "None"},
     "None_T2": {"diagnosis": "질환 없음", "severity": "N/A"},
-    "Mild": {"diagnosis": "주요우울장애(MDD)", "severity": "경도(Mild)"},
-    "Moderate": {"diagnosis": "주요우울장애(MDD)", "severity": "중등도(Moderate)"},
-    "Severe": {"diagnosis": "주요우울장애(MDD)", "severity": "중증(Severe)"},
-    "OCD": {"diagnosis": "강박장애", "severity": "N/A"},
-    "GAD": {"diagnosis": "범불안장애", "severity": "N/A"},
-    "MDD": {"diagnosis": "주요우울장애", "severity": "N/A"}
+    "Mild": {"diagnosis": "Major Depressive Disorder", "severity": "Mild"},
+    "Moderate": {"diagnosis": "Major Depressive Disorder", "severity": "Moderate"},
+    "Severe": {"diagnosis": "Major Depressive Disorder", "severity": "Severe"},
+    "OCD": {"diagnosis": "Obsessive-Compulsive Disorder", "severity": "N/A"},
+    "GAD": {"diagnosis": "Generalized Anxiety Disorder", "severity": "N/A"},
+    "MDD": {"diagnosis": "Major Depressive Disorder", "severity": "N/A"}
 }
 
-# VIDEO_LENGTHS = {
-#     "None_T2": 210, "Mild": 230, "Moderate": 250, "Severe": 208,
-#     "None_T1": 236, "OCD": 263, "GAD": 235, "MDD": 189
-# }
 VIDEO_LENGTHS = {
     "None_T1": 226, "Mild": 230, "Moderate": 250, "Severe": 208,
     "None_T2": 235, "OCD": 344, "GAD": 265, "MDD": 185
 }
+
 # 실험 전체 및 타임 로그 관리를 위한 독립 세션 초기화
 if 'time_logs' not in st.session_state:
     st.session_state.time_logs = {}
@@ -786,7 +782,7 @@ def participant_view():
             st.markdown("**1. 이 환자의 가장 가능성 높은 질환(진단명)은 무엇이라고 생각하십니까?**")
             st.session_state.data[f"{video_id}_q10_category"] = st.selectbox(
                                 "질환 선택",
-                                ["해당 없음", "강박장애", "주요우울장애", "범불안장애"],
+                                ["해당 없음", "Obsessive-Compulsive Disorder", "Major Depressive Disorder", "Generalized Anxiety Disorder"],
                                 index=None
                             )
 
@@ -918,8 +914,8 @@ def participant_view():
             **3. 앞선 실험에서 평가했던 아래의 질환 목록을 참고하여, 진단이 가장 어렵거나 감별하기 헷갈렸던 질환은 무엇이며 그 이유는 무엇인지 자세히 서술해 주십시오.**
 
             > **[참고: 실험 진행 질환 목록]**
-            > * **Task 1** : 주요우울장애(Severe), 주요우울장애(Moderate), 주요우울장애(Mild), 질환 없음
-            > * **Task 2** : 강박장애, 범불안장애, 주요우울장애, 질환 없음
+            > * **Task 1** : Major Depressive Disorder(Severe), Major Depressive Disorder(Moderate), Major Depressive Disorder(Mild), None
+            > * **Task 2** : Obsessive-Compulsive Disorder, Generalized Anxiety Disorder, Major Depressive Disorder, None
             """)
 
             # 질문 텍스트는 위에서 마크다운으로 처리했으므로, text_area의 label은 숨김(collapsed) 처리
