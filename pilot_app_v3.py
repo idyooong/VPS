@@ -782,7 +782,7 @@ def participant_view():
             st.markdown("**1. 이 환자의 가장 가능성 높은 질환(진단명)은 무엇이라고 생각하십니까?**")
             st.session_state.data[f"{video_id}_q10_category"] = st.selectbox(
                                 "질환 선택",
-                                ["해당 없음", "Obsessive-Compulsive Disorder", "Major Depressive Disorder", "Generalized Anxiety Disorder"],
+                                ["None (해당 없음)", "Obsessive-Compulsive Disorder", "Major Depressive Disorder", "Generalized Anxiety Disorder"],
                                 index=None
                             )
 
