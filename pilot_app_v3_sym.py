@@ -1,4 +1,4 @@
-# Sev -> Sym
+# Sym -> Sev
 import streamlit as st
 import pandas as pd
 import gspread
@@ -243,8 +243,8 @@ def participant_view():
         <div style='margin-top: 20px; padding: 20px; border-left: 5px solid #1f77b4;'>
             <h4>본 실험은 두 가지 파트로 나뉘어 진행됩니다.</h4>
             <ul>
-                <li><b> [Part 1]</b> 환자의 동일한 질환에 대해 <b>심각도</b>를 평가하는 과제</li>
-                <li><b> [Part 2]</b> 환자의 <b>질환 종류</b>를 평가하는 과제</li>
+                <li><b> [Part 1]</b> 환자의 <b>질환 종류</b>를 평가하는 과제</li>
+                <li><b> [Part 2]</b> 환자의 동일한 질환에 대해 <b>심각도</b>를 평가하는 과제</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
@@ -416,22 +416,24 @@ def participant_view():
                 st.session_state.data['simulation_experience'] = selected_experiences
                 save_intermediate_data(current_step="demography")
                 # 검증 완료 후 이동
-                st.session_state.step = 'task1_instructions'
+                st.session_state.step = 'task2_instructions'
                 st.rerun()
     
     # ---------------------------------------------------------
     # [Step] TASK 1 - Instructions (Task 1 사전 안내)
     # ---------------------------------------------------------
     elif step == 'task1_instructions':
-        st.title("파트 1: 우울증 심각도 평가 안내")
+        st.title("파트 2: 우울증 심각도 평가 안내")
         st.markdown("<br>", unsafe_allow_html=True)
         
         html_t1 = """
         <div style="background-color: #ffffff; padding: 35px; border-radius: 12px; border-left: 6px solid #1f77b4; box-shadow: 0px 4px 12px rgba(0,0,0,0.05);">
-            <h3 style="color: #1f77b4; margin-top: 0; margin-bottom: 20px;"> Task 1 진행 방식</h3>
+            <h3 style="color: #1f77b4; margin-top: 0; margin-bottom: 20px;"> Task 2 진행 방식</h3>
             <p style="font-size: 16px; line-height: 1.6; color: #333;">
-                지금부터 <b>첫 번째 파트(Task 1)</b>가 시작됩니다.<br>
-                Task 1에서 등장하는 모든 가상 환자는 <b>'주요우울장애(Major Depressive Disorder)'</b>를 앓고 있는 것으로 설정되어 있습니다.
+                수고하셨습니다. Task 1이 모두 종료되었습니다.<br>
+                <span style="color: #0056b3; font-weight: bold;">본격적인 Task 2 시작에 앞서, 약 5분간 충분한 휴식을 취하신 후 진행해 주시길 권장합니다.</span><br><br>
+                이제 <b>두 번째 파트(Task 2)</b>가 시작됩니다.<br>
+                Task 2에서 등장하는 모든 가상 환자는 <b>'주요우울장애(Major Depressive Disorder)'</b>를 앓고 있는 것으로 설정되어 있습니다.
             </p>
             <hr style="border: 0; height: 1px; background: #eee; margin: 20px 0;">
             <ul style="font-size: 15px; color: #555; line-height: 1.8; margin-bottom: 20px;">
@@ -440,7 +442,7 @@ def participant_view():
                 <li>정답 확인 후, 가상 환자가 해당 심각도를 얼마나 정확하게 표현했는지 평가해 주시면 됩니다.</li>
             </ul>
             <p style="font-size: 15px; font-weight: bold; color: #d62728; margin-bottom: 0;">
-                준비가 되셨다면 아래 버튼을 눌러 첫 번째 영상 평가를 시작해 주십시오.
+                준비가 되셨다면 아래 버튼을 눌러 Task 2 첫 번째 영상 평가를 시작해 주십시오.
             </p>
         </div>
         """
@@ -450,7 +452,7 @@ def participant_view():
         col1, col2, col3 = st.columns([1, 1.5, 1])
         with col2:
             # key 부여로 버튼 충돌 방지
-            if st.button("Task 1 시작하기", use_container_width=True, key="btn_start_t1"):
+            if st.button("Task 2 시작하기", use_container_width=True, key="btn_start_t1"):
                 st.session_state.step = 'task1_phase1'
                 st.rerun()
     # ---------------------------------------------------------
@@ -460,7 +462,7 @@ def participant_view():
         video_id = st.session_state.task1_videos[st.session_state.v_idx]
         required_time = VIDEO_LENGTHS.get(video_id, 60)
         
-        st.title("[Task 1] 우울증 심각도 평가")
+        st.title("[Task 2] 우울증 심각도 평가")
         st.write(f"### 임상적 증상 평가  {st.session_state.v_idx + 1} / {len(st.session_state.task1_videos)}")
         # st.markdown("**정확한 평가를 위해 영상을 전체화면으로 전환한 후 시청해 주시기 바랍니다.**")
         
@@ -671,35 +673,34 @@ def participant_view():
     # [Step] TASK 2 - Instructions (Task 2 사전 안내)
     # ---------------------------------------------------------
     elif step == 'task2_instructions':
-        st.title("파트 2: 질환 종류 평가 안내")
+        st.title("파트 1: 질환 종류 평가 안내")
         st.markdown("<br>", unsafe_allow_html=True)
         
         html_t2 = """
-        <div style="background-color: #ffffff; padding: 35px; border-radius: 12px; border-left: 6px solid #ff7f0e; box-shadow: 0px 4px 12px rgba(0,0,0,0.05);">
-            <h3 style="color: #ff7f0e; margin-top: 0; margin-bottom: 20px;"> Task 2 진행 방식</h3>
+        <div style="background-color: #ffffff; padding: 35px; border-radius: 12px; border-left: 6px solid #1f77b4; box-shadow: 0px 4px 12px rgba(0,0,0,0.05);">
+            <h3 style="color: #1f77b4; margin-top: 0; margin-bottom: 20px;"> Task 1 진행 방식</h3>
             <p style="font-size: 16px; line-height: 1.6; color: #333;">
-                수고하셨습니다. Task 1이 모두 종료되었습니다. 
-                <span style="color: #0056b3; font-weight: bold;">본격적인 Task 2 시작에 앞서, 약 5분간 충분한 휴식을 취하신 후 진행해 주시길 권장합니다.</span><br><br>
-                이제 <b>두 번째 파트(Task 2)</b>가 시작됩니다.<br>
-                본 파트에서는 가상 환자 영상을 시청하며 임상적 판단을 수행하게 됩니다.
+                지금부터 <b>첫 번째 파트(Task 1)</b>가 시작됩니다.<br>
+                본 파트에서는 가상 환자 영상을 시청하며 임상적 진단을 수행하게 됩니다.
             </p>
             <hr style="border: 0; height: 1px; background: #eee; margin: 20px 0;">
             <ul style="font-size: 15px; color: #555; line-height: 1.8; margin-bottom: 20px;">
                 <li>영상을 관찰한 후, 환자의 <b>가장 가능성 높은 질환명</b>을 평가해 주십시오.</li>
                 <li>개별 영상 평가가 끝날 때마다 시스템에 <b>실제 설계된 정답</b>이 즉시 공개됩니다.</li>
-                <li>정답을 기준으로 가상 환자가 질환을 얼마나 사실적으로 묘사했는지 평가해 주시면 됩니다.</li>
+                <li>정답 확인 후, 해당 가상 환자가 질환을 얼마나 사실적으로 묘사했는지 평가해 주시면 됩니다.</li>
             </ul>
             <p style="font-size: 15px; font-weight: bold; color: #d62728; margin-bottom: 0;">
-                준비가 되셨다면 아래 버튼을 눌러 Task 2 첫 번째 영상 평가를 시작해 주십시오.
+                준비가 되셨다면 아래 버튼을 눌러 첫 번째 영상 평가를 시작해 주십시오.
             </p>
         </div>
+
         """
         st.markdown(html_t2, unsafe_allow_html=True)
         
         st.write("")
         col1, col2, col3 = st.columns([1, 1.5, 1])
         with col2:
-            if st.button("Task 2 시작하기", use_container_width=True, key="btn_start_t2"):
+            if st.button("Task 1 시작하기", use_container_width=True, key="btn_start_t2"):
                 st.session_state.step = 'task2_phase1'
                 st.rerun()
     # ---------------------------------------------------------
@@ -709,7 +710,7 @@ def participant_view():
         video_id = st.session_state.task2_videos[st.session_state.v_idx]
         required_time = VIDEO_LENGTHS.get(video_id, 60)
         
-        st.title("[Task 2] 질환 종류 평가")
+        st.title("[Task 1] 질환 종류 평가")
         st.write(f"### 임상적 평가  {st.session_state.v_idx + 1} / {len(st.session_state.task2_videos)}")
         # st.markdown("**정확한 평가를 위해 영상을 전체화면으로 전환한 후 시청해 주시기 바랍니다.**")
 
@@ -902,7 +903,7 @@ def participant_view():
         video_id = st.session_state.task2_videos[st.session_state.v_idx]
         gt_diag = GROUND_TRUTH.get(video_id, {}).get("diagnosis", "미상")
 
-        st.title("[Task 2] 시스템 품질 및 경험 평가")
+        st.title("[Task 1] 시스템 품질 및 경험 평가")
         st.info(f"이 가상 환자의 정답 기준: **[질환: {gt_diag}]**")
         
         render_system_evaluation_form(video_id, task_num=2, v_idx=st.session_state.v_idx)
@@ -911,18 +912,18 @@ def participant_view():
     # [Step] Final (종합 평가)
     # ---------------------------------------------------------
     elif step == 'task1_final':
-        st.title("Task 1의 가상환자 평가 실험 완료")
+        st.title("Task 2의 가상환자 평가 실험 완료")
         st.subheader("임상 훈련 도구로서의 활용성 및 종합 평가")
-        st.info("Task 1의 모든 영상 평가가 완료되었습니다. 본 단계(심각도 평가) 및 가상 환자 시스템 전체에 대한 종합적인 의견을 여쭙습니다.")
+        st.info("모든 영상 평가가 완료되었습니다. 본 단계(심각도 평가) 및 가상 환자 시스템 전체에 대한 종합적인 의견을 여쭙습니다.")
         
         with st.form("t1_comprehensive_survey"):
             st.session_state.data["t1_q26_overall_exp"] = st.radio("**1. 가상 환자를 사용한 귀하의 전반적인 경험을 1에서 10까지의 척도로 평가해 주십시오. (1점은 '매우 나쁨', 10점은 '매우 좋음)**", [str(i) for i in range(1, 11)], index=None, horizontal=True)
             st.session_state.data["t1_q27_reuse_intent"] = st.radio("**2. 향후 훈련 과정 중에 가상 환자를 다시 사용할 의향이 얼마나 있습니까? (1점은 '전혀 관심이 없음', 10점은 '매우 관심이 있음')**", [str(i) for i in range(1, 11)], index=None, horizontal=True)
             
             st.markdown("""
-            **3. 앞선 Task 1에서 평가했던 아래의 목록을 참고하여, 어렵거나 헷갈렸던 심각도는 무엇이며 그 이유는 무엇인지 자세히 서술해 주십시오.**
+            **3. 앞선 Task 2에서 평가했던 아래의 목록을 참고하여, 어렵거나 헷갈렸던 심각도는 무엇이며 그 이유는 무엇인지 자세히 서술해 주십시오.**
 
-            > **[참고: Task 1 진행 목록]**
+            > **[참고: Task 2 진행 목록]**
             > Major Depressive Disorder(Severe, Moderate, Mild), None
             """)
 
@@ -932,26 +933,26 @@ def participant_view():
             st.session_state.data["t1_q29_pros"] = st.text_area("**4. 임상 교육 도구로서 본 가상 환자 시스템의 가장 큰 장점은 무엇이라고 생각하십니까?**")
             st.session_state.data["t1_q30_cons"] = st.text_area("**5. 본 가상 환자 시스템에서 이질감을 느꼈던 부분이나 개선되어야 할 점이 있다면 제안해 주십시오.**")
 
-            if st.form_submit_button("Task 1 피드백 제출 및 다음 단계로 이동"):
+            if st.form_submit_button("최종 데이터 제출 및 실험 종료"):
                 if not all([st.session_state.data.get("t1_q26_overall_exp"), st.session_state.data.get("t1_q27_reuse_intent"), st.session_state.data.get("t1_q28_diff_diagnosis"), st.session_state.data.get("t1_q29_pros"), st.session_state.data.get("t1_q30_cons")]):
                     st.error("모든 종합 평가 문항을 작성해 주십시오.")
                     st.stop()
-                st.session_state.step = 'task2_instructions'
+                st.session_state.step = 'save'
                 st.rerun()
 
     elif step == 'task2_final':
-        st.title("Task 2의 가상환자 평가 실험 완료")
+        st.title("Task 1의 가상환자 평가 실험 완료")
         st.subheader("임상 훈련 도구로서의 활용성 및 종합 평가")
-        st.info("모든 영상 평가가 완료되었습니다. 본 단계(질환 평가) 및 가상 환자 시스템 전체에 대한 종합적인 의견을 여쭙습니다.")
+        st.info("Task 1의 모든 영상 평가가 완료되었습니다. 본 단계(질환 평가) 및 가상 환자 시스템 전체에 대한 종합적인 의견을 여쭙습니다.")
         
         with st.form("task2_comprehensive_survey"):
             st.session_state.data["t2_q26_overall_exp"] = st.radio("**1. 가상 환자를 사용한 귀하의 전반적인 경험을 1에서 10까지의 척도로 평가해 주십시오. (1점은 '매우 나쁨', 10점은 '매우 좋음)**", [str(i) for i in range(1, 11)], index=None, horizontal=True)
             st.session_state.data["t2_q27_reuse_intent"] = st.radio("**2. 향후 훈련 과정 중에 가상 환자를 다시 사용할 의향이 얼마나 있습니까? (1점은 '전혀 관심이 없음', 10점은 '매우 관심이 있음')**", [str(i) for i in range(1, 11)], index=None, horizontal=True)
             
             st.markdown("""
-            **3. 앞선 Task 2에서 평가했던 아래의 목록을 참고하여, 어렵거나 헷갈렸던 질환은 무엇이며 그 이유는 무엇인지 자세히 서술해 주십시오.**
+            **3. 앞선 Task 1에서 평가했던 아래의 목록을 참고하여, 어렵거나 헷갈렸던 질환은 무엇이며 그 이유는 무엇인지 자세히 서술해 주십시오.**
 
-            > **[참고: Task 2 진행 목록]**
+            > **[참고: Task 1 진행 목록]**
             > Obsessive-Compulsive Disorder, Generalized Anxiety Disorder, Major Depressive Disorder, None
             """)
 
@@ -961,11 +962,11 @@ def participant_view():
             st.session_state.data["t2_q29_pros"] = st.text_area("**4. 임상 교육 도구로서 본 가상 환자 시스템의 가장 큰 장점은 무엇이라고 생각하십니까?**")
             st.session_state.data["t2_q30_cons"] = st.text_area("**5. 본 가상 환자 시스템에서 이질감을 느꼈던 부분이나 개선되어야 할 점이 있다면 제안해 주십시오.**")
 
-            if st.form_submit_button("최종 데이터 제출 및 실험 종료"):
+            if st.form_submit_button("Task 1 피드백 제출 및 다음 단계로 이동"):
                 if not all([st.session_state.data.get("t2_q26_overall_exp"), st.session_state.data.get("t2_q27_reuse_intent"), st.session_state.data.get("t2_q28_diff_diagnosis"), st.session_state.data.get("t2_q29_pros"), st.session_state.data.get("t2_q30_cons")]):
                     st.error("모든 종합 평가 문항을 작성해 주십시오.")
                     st.stop()
-                st.session_state.step = 'save'
+                st.session_state.step = 'task1_instructions'
                 st.rerun()
 
     # ---------------------------------------------------------
